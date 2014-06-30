@@ -12,6 +12,7 @@ import grp
 import ConfigParser
 import os
 import Cobalt.Util
+from ctypes import *
 from Cobalt.Exceptions import  JobValidationError, NotSupportedError, ComponentLookupError
 from Cobalt.DataTypes.ProcessGroup import ProcessGroupDict
 from Cobalt.Data import DataDict
@@ -19,9 +20,25 @@ from Cobalt.Proxy import ComponentProxy
 from Cobalt.Components.base import Component, exposed, automatic
 from Cobalt.Util import config_true_values
 
+STRING = c_char_p
+int8_t = c_int8
+orcm_node_state_t = int8_t
+
+class liborcm_node_t (Structure):
+    _fields_ = [
+        ('name', STRING),
+        ('state', orcm_node_state_t),
+    ]
+
 __all__ = [
-    "OrcmBaseSystem",
+    "OrcmBaseSystem", "orcm_node_state_t", "liborcm_node_t", "int8_t",
 ]
+
+orcm = CDLL("liborcmscd.so")
+P_node_t = POINTER(liborcm_node_t)
+PP_node_t = POINTER(P_node_t)
+orcm.get_nodes.argtypes = [POINTER(PP_node_t), POINTER(c_int)]
+orcm.get_nodes.restype = c_int
 
 __config = ConfigParser.ConfigParser()
 __config.read(Cobalt.CONFIG_FILES)
@@ -143,10 +160,10 @@ class OrcmBaseSystem (Component):
         Component.__setstate__(self, state)
         self.all_nodes = set()
         self.node_order = {}
-        #BMM #try:
-        #BMM #self.configure(cluster_hostfile)
-        #BMM #except IOError:
-        #BMM #self.logger.error("unable to load hostfile", exc_info=True)
+        try:
+            self.configure()
+        except IOError:
+            self.logger.error("unable to load hostfile", exc_info=True)
         self.queue_assignments = state.get('queue_assignments', {})
         nonexistent_queues = []
         #make sure we can't try and schedule nodes that don't exist
@@ -543,16 +560,16 @@ class OrcmBaseSystem (Component):
 
     def configure(self, filename):
         '''Add nodes from ORCM to Cobalt's configuration of tracked nodes.
-
         '''
-        #TODO: add query to ORCM
-        #BMM #counter = 0
-        #BMM #for line in hostfile:
-        #BMM    #name = line.strip()
-        #BMM    #self.all_nodes.add(name)
-        #BMM    #self.node_order[name] = counter
-        #BMM    #counter += 1
-
+        nodelist = PP_node_t()
+        node_count = c_int(0)
+        counter = 0
+        orcm.get_nodes(byref(nodelist), byref(node_count))
+        for i in range(node_count.value):
+            name = nodelist[i][0].name
+            self.all_nodes.add(name)
+            self.node_order[name] = counter
+            counter += 1
 
     # this gets called by bgsched in order to figure out if there are partition overlaps;
     # it was written to provide the data that bgsched asks for and raises an exception
