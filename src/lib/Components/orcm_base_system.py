@@ -34,6 +34,12 @@ __all__ = [
     "OrcmBaseSystem", "orcm_node_state_t", "liborcm_node_t", "int8_t",
 ]
 
+ORCM_NODE_STATE_UNDEF   = 0
+ORCM_NODE_STATE_UNKNOWN = 1
+ORCM_NODE_STATE_UP      = 2
+ORCM_NODE_STATE_DOWN    = 3
+ORCM_NODE_STATE_SESTERM = 4
+
 orcm = CDLL("liborcmscd.so")
 P_node_t = POINTER(liborcm_node_t)
 PP_node_t = POINTER(P_node_t)
@@ -134,7 +140,8 @@ class OrcmBaseSystem (Component):
         self.queue_assignments = {}
         self.node_order = {}
 
-        #TODO: Get node definitions/states
+        self.configure()
+        
         self.queue_assignments["default"] = set(self.all_nodes)
         self.alloc_only_nodes = {} # nodename:starttime
         self.cleaning_processes = []
@@ -160,17 +167,14 @@ class OrcmBaseSystem (Component):
         Component.__setstate__(self, state)
         self.all_nodes = set()
         self.node_order = {}
-        try:
-            self.configure()
-        except IOError:
-            self.logger.error("unable to load hostfile", exc_info=True)
+        self.configure()
         self.queue_assignments = state.get('queue_assignments', {})
         nonexistent_queues = []
         #make sure we can't try and schedule nodes that don't exist
         if self.queue_assignments == {}:
             self.queue_assignments["default"] = set(self.all_nodes)
         else:
-            #remove nodes that have been removed from cobalt.hostfile
+            #remove nodes that have disappeared
             for queue, nodes in self.queue_assignments.iteritems():
                 corrected_nodes = self.all_nodes & set(nodes)
                 if corrected_nodes == set():
@@ -566,9 +570,12 @@ class OrcmBaseSystem (Component):
         counter = 0
         orcm.get_nodes(byref(nodelist), byref(node_count))
         for i in range(node_count.value):
-            name = nodelist[i][0].name
+            name = nodelist[i].contents.name
+            state = nodelist[i].contents.state
             self.all_nodes.add(name)
             self.node_order[name] = counter
+            if (state == ORCM_NODE_STATE_UNKNOWN) or (state == ORCM_NODE_STATE_DOWN):
+                down_nodes.add(name)
             counter += 1
 
     # this gets called by bgsched in order to figure out if there are partition overlaps;
