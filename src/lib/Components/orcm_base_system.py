@@ -11,6 +11,7 @@ import pwd
 import grp
 import ConfigParser
 import os
+import ctypes
 import Cobalt.Util
 from ctypes import *
 from Cobalt.Exceptions import  JobValidationError, NotSupportedError, ComponentLookupError
@@ -40,7 +41,11 @@ ORCM_NODE_STATE_UP      = 2
 ORCM_NODE_STATE_DOWN    = 3
 ORCM_NODE_STATE_SESTERM = 4
 
-orcm = CDLL("liborcmscd.so")
+if "posix" in os.name:
+    orcm = CDLL("liborcmscd.so", mode=ctypes.RTLD_GLOBAL)
+else:
+    orcm = CDLL("liborcmscd.so")
+
 P_node_t = POINTER(liborcm_node_t)
 PP_node_t = POINTER(P_node_t)
 orcm.get_nodes.argtypes = [POINTER(PP_node_t), POINTER(c_int)]
