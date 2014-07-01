@@ -49,8 +49,8 @@ def main():
     
     impl = client_utils.component_call(SYSMGR, False, 'get_implementation', ())
 
-    # make sure we're on a cluster-system
-    if "cluster_system" != impl:
+    # make sure we're on a cluster-system or orcm-system
+    if ("cluster_system" != impl) and ("orcm_system" != impl):
         client_utils.logger.error("nodelist is only supported on cluster systems.  Try partlist instead.")
         sys.exit(0)
 

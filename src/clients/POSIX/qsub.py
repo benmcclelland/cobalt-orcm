@@ -303,8 +303,8 @@ def get_interactive_command(parser, spec, opts, opt2spec, def_spec):
             client_utils.logger.error("Error: unable to connect to the system component")
             sys.exit(1)
 
-        if "cluster_system" != impl:
-            client_utils.logger.error("Interactive jobs are only supported on cluster systems")
+        if ("cluster_system" != impl) and ("orcm_system" != impl):
+            client_utils.logger.error("Interactive jobs are only supported on cluster or orcm systems")
             sys.exit(1)
         else:
             spec['command'] = "/bin/sleep"

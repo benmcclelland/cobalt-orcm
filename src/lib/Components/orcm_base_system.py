@@ -515,6 +515,7 @@ class OrcmBaseSystem (Component):
         def my_cmp(left, right):
             return cmp(left[2], right[2])
 
+        self.configure()
         status_list = []
         for n in self.all_nodes:
             if n in self.running_nodes:
@@ -567,7 +568,7 @@ class OrcmBaseSystem (Component):
         return ret
     verify_locations = exposed(verify_locations)
 
-    def configure(self, filename):
+    def configure(self):
         '''Add nodes from ORCM to Cobalt's configuration of tracked nodes.
         '''
         nodelist = PP_node_t()
@@ -580,7 +581,7 @@ class OrcmBaseSystem (Component):
             self.all_nodes.add(name)
             self.node_order[name] = counter
             if (state == ORCM_NODE_STATE_UNKNOWN) or (state == ORCM_NODE_STATE_DOWN):
-                down_nodes.add(name)
+                self.down_nodes.add(name)
             counter += 1
 
     # this gets called by bgsched in order to figure out if there are partition overlaps;
