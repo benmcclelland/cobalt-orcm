@@ -12,7 +12,7 @@ convert_argv_to_quoted_command_string = Cobalt.Util.convert_argv_to_quoted_comma
 _logger = logging.getLogger(__name__)
 
 
-class ClusterPreexec(PGPreexec):
+class OrcmPreexec (PGPreexec):
     def __init__(self, child, cmd_str, env):
         PGPreexec.__init__(self, child, cmd_str, env)
 
@@ -23,11 +23,11 @@ class ClusterPreexec(PGPreexec):
         PGPreexec.do_last(self)
 
 
-class ClusterRunForker (PGForker):
+class OrcmRunForker (PGForker):
     """Component for starting script jobs"""
     
-    name = "cluster_run_forker"
-    implementation = "cluster_run_forker"
+    name = "orcm_run_forker"
+    implementation = "orcm_run_forker"
     logger = _logger
     
     def __init__ (self, *args, **kwargs):
@@ -81,7 +81,7 @@ class ClusterRunForker (PGForker):
         _logger.info("orig command str: %s", cmd_str)
 
         try:
-            preexec_fn = ClusterPreexec(child, cmd_str, postfork_env)
+            preexec_fn = OrcmPreexec(child, cmd_str, postfork_env)
         except:
             _logger.error("%s: instantiation of preexec class failed; aborting execution")
             raise

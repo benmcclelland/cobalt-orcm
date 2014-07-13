@@ -292,8 +292,7 @@ class OrcmBaseSystem (Component):
 
     # the argument "required" is used to pass in the set of locations allowed by a reservation;
     def find_job_location(self, arg_list, end_times):
-        '''Find the best location for a job and start the job allocation process (this is different from 
-        what happens on BlueGenes!)
+        '''Find the best location for a job and start the job allocation process
 
         '''
         best_location_dict = {}
@@ -421,6 +420,21 @@ class OrcmBaseSystem (Component):
 
 
     def find_queue_equivalence_classes(self, reservation_dict, active_queue_names, passthrough_partitions=[]):
+        '''Take a dictionary of reservation information and a list of active
+            queues return a list of dictionaries containing queues, partition
+            associations and reservation data.
+            
+            Input:
+            reservation_dict: A dict of reservations and associated partitions
+            active_queue_names: A list of queues that you can schedule jobs from
+            passthrough_partitions: not used in this implementation
+            
+            Output:
+            A dictionary of queues and associated reservations that have resources
+            in common with each other
+            
+        '''
+        
         equiv = []
         for q in self.queue_assignments:
             # skip queues that aren't "running"
