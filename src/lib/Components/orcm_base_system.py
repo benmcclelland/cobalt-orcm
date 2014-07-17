@@ -42,14 +42,14 @@ ORCM_NODE_STATE_DOWN    = 3
 ORCM_NODE_STATE_SESTERM = 4
 
 if "posix" in os.name:
-    orcm = CDLL("liborcmscd.so", mode=ctypes.RTLD_GLOBAL)
+    orcm = CDLL("liborcmapi.so", mode=ctypes.RTLD_GLOBAL)
 else:
-    orcm = CDLL("liborcmscd.so")
+    orcm = CDLL("liborcmapi.so")
 
 P_node_t = POINTER(liborcm_node_t)
 PP_node_t = POINTER(P_node_t)
-orcm.get_nodes.argtypes = [POINTER(PP_node_t), POINTER(c_int)]
-orcm.get_nodes.restype = c_int
+orcm.orcmapi_get_nodes.argtypes = [POINTER(PP_node_t), POINTER(c_int)]
+orcm.orcmapi_get_nodes.restype = c_int
 
 __config = ConfigParser.ConfigParser()
 __config.read(Cobalt.CONFIG_FILES)
@@ -412,7 +412,7 @@ class OrcmBaseSystem (Component):
                         locations_to_clean.add(location)
                         found_locations.add(location)
 
-            self.clean_nodes(list(locations_to_clean), user, jobid)
+#            self.clean_nodes(list(locations_to_clean), user, jobid)
 
 
     def _walltimecmp(self, dict1, dict2):
@@ -588,7 +588,7 @@ class OrcmBaseSystem (Component):
         nodelist = PP_node_t()
         node_count = c_int(0)
         counter = 0
-        orcm.get_nodes(byref(nodelist), byref(node_count))
+        orcm.orcmapi_get_nodes(byref(nodelist), byref(node_count))
         for i in range(node_count.value):
             name = nodelist[i].contents.name
             state = nodelist[i].contents.state

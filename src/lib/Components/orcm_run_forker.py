@@ -67,7 +67,6 @@ class OrcmRunForker (PGForker):
         postfork_env = {}
         postfork_env.update(pg.env)
         #These are set in cobalt-launcher.py
-        #TODO: add any orcm env vars that are needed as well
         postfork_env['HOME'] = homedir
         postfork_env['USER'] = pg.user
         postfork_env["COBALT_PARTNAME"] = pg.partition

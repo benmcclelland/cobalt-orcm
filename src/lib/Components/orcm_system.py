@@ -87,7 +87,7 @@ class OrcmProcessGroup(ProcessGroup):
                 logger.critical("Job: %s/%s: Executable for simulator not specified! This job will not run!")
                 raise RuntimeError("Unspecified simulation_executable in cobalt config")
         else:
-            cmd_exe = get_orm_system_config('launcher','/usr/bin/cobalt-launcher.py')
+            cmd_exe = get_orcm_system_config('launcher','/usr/bin/cobalt-launcher.py')
 
         #run the user script off the login node, and on the compute node
         if (get_orcm_system_config("run_remote", 'true').lower() in config_true_values and not sim_mode):
@@ -239,8 +239,8 @@ class OrcmSystem (OrcmBaseSystem):
     def wait_process_groups (self, specs):
         self._get_exit_status()
         process_groups = [pg for pg in self.process_groups.q_get(specs) if pg.exit_status is not None]
-        for process_group in process_groups:
-            self.clean_nodes(process_group.location, process_group.user, process_group.jobid)
+#        for process_group in process_groups:
+#            self.clean_nodes(process_group.location, process_group.user, process_group.jobid)
         return process_groups
     wait_process_groups = locking(exposed(query(wait_process_groups)))
 
